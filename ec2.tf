@@ -17,41 +17,51 @@ resource "aws_security_group" "my_security_group" {
   vpc_id      = aws_default_vpc.default.id # VPC ID
 
   # inbound rules (InBound means I want to allow traffic from the internet to my EC2 instance)
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # allow SSH from anywhere
-    description = "SSH access from anywhere"
+  dynamic "ingress" {
+    for_each = var.allow_ssh ? [1] : [] # if allow_ssh is true, create ingress rule for SSH
+    content {
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"] # allow SSH from anywhere
+      description = "SSH access from anywhere"
+    }
   }
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # allow HTTP from anywhere
-    description = "HTTP access from anywhere"
+  dynamic "ingress" {
+    for_each = var.allow_http ? [1] : [] # Only create HTTP rule if allow_http is true
+    content {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "HTTP access from anywhere"
+    }
   }
-  ingress {
-    from_port   = 8000
-    to_port     = 8000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # allow HTTP from anywhere
-    description = "NodePort access from anywhere"
+  dynamic "ingress" {
+    for_each = var.allow_nodeport ? [1] : [] # Only create NodePort rule if allow_nodeport is true
+    content {
+      from_port   = 8000
+      to_port     = 8000
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "NodePort access from anywhere"
+    }
   }
-
 
   # outbound rules (OutBound means I want to allow traffic from my EC2 instance to the internet)
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"          # all protocols means "TCP, UDP, ICMP, etc"
-    cidr_blocks = ["0.0.0.0/0"] # allow all traffic to anywhere (I can serve anything from my EC2 instance)
-    description = "Allow all outbound traffic"
+  dynamic "egress" {
+    for_each = var.outbound_traffic_allowed ? [1] : [] # Create egress if allowed
+    content {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1" # All protocols
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "Allow all outbound traffic"
+    }
   }
 }
 
 # EC2 Instance
-
 resource "aws_instance" "my_instance" {
   # count           = 2                        # create 2 EC2 instances
   for_each = tomap({
@@ -67,8 +77,8 @@ resource "aws_instance" "my_instance" {
   depends_on = [aws_security_group.my_security_group, aws_key_pair.my_key] # wait for security group and key pair to be created before creating EC2 instance
 
   root_block_device {
-    volume_size = var.ec2_root_storage_size # 15 GB root volume size
-    volume_type = "gp3"                     # General Purpose SSD
+    volume_size = var.env == "prod" ? var.ec2_root_storage_size : var.ec2_root_default_storage_size # 15 GB for dev and 10 GB for prod
+    volume_type = "gp3"                                                                             # General Purpose SSD
   }
   tags = {
     Name = each.key # Name of the EC2 instance

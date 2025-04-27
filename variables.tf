@@ -8,11 +8,37 @@ variable "ec2_root_storage_size" {
   type    = number
 }
 
+variable "ec2_root_default_storage_size" {
+  default = 10
+  type    = number
+}
+
 variable "ec2_ami_id" {
   default = "ami-0e35ddab05955cf57" #ubuntu
   type    = string
 }
 
+variable "env" {
+  default = "prod"
+  type    = string
+}
 
-# chmod 400 terra-key-ec2.pem
-# ssh -i terra-key-ec2 ubuntu@ec2-3-109-206-131.ap-south-1.compute.amazonaws.com
+variable "allow_ssh" {
+  default = true
+  type    = bool
+}
+
+variable "allow_http" {
+  default = true
+  type    = bool
+}
+
+variable "allow_nodeport" {
+  default = false
+  type    = bool
+}
+
+variable "outbound_traffic_allowed" {
+  default = true
+  type    = bool
+}
