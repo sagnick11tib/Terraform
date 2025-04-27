@@ -53,19 +53,25 @@ resource "aws_security_group" "my_security_group" {
 # EC2 Instance
 
 resource "aws_instance" "my_instance" {
-  count           = 2                        # create 2 EC2 instances
+  # count           = 2                        # create 2 EC2 instances
+  for_each = tomap({
+    Nicks-EC2-Automate-micro  = "t2.micro",
+    Nicks-EC2-Automate-microo = "t2.micro",
+  })                                             # create 2 EC2 instances with different names and same type # META ARGUMENTS
   key_name        = aws_key_pair.my_key.key_name # key pair name
   security_groups = [aws_security_group.my_security_group.name]
-  instance_type   = var.ec2_instance_type    # free tier eligible instance type
+  instance_type   = each.value
   ami             = var.ec2_ami_id           #ubuntu
   user_data       = file("install_nginx.sh") # install nginx on EC2 instance
+
+  depends_on = [aws_security_group.my_security_group, aws_key_pair.my_key] # wait for security group and key pair to be created before creating EC2 instance
 
   root_block_device {
     volume_size = var.ec2_root_storage_size # 15 GB root volume size
     volume_type = "gp3"                     # General Purpose SSD
   }
   tags = {
-    Name = "Nicks-EC2-Automate"
+    Name = each.key # Name of the EC2 instance
   }
 }
  
