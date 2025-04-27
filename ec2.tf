@@ -55,11 +55,12 @@ resource aws_security_group my_security_group {
 resource aws_instance my_instance {
     key_name = aws_key_pair.my_key.key_name # key pair name
     security_groups = [aws_security_group.my_security_group.name]
-    instance_type = "t2.micro" # free tier eligible instance type
-    ami = "ami-0e35ddab05955cf57" #ubuntu
+    instance_type = var.ec2_instance_type # free tier eligible instance type
+    ami = var.ec2_ami_id #ubuntu
+    user_data = file("install_nginx.sh") # install nginx on EC2 instance
 
     root_block_device {
-        volume_size = 15 # 15 GB root volume size
+        volume_size = var.ec2_root_storage_size # 15 GB root volume size
         volume_type = "gp3" # General Purpose SSD
     }
     tags = {

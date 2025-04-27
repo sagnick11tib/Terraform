@@ -1,3 +1,11 @@
 terra-key-ec2
 terra-key-ec2.pub
-.terraform
+*.tfstate
+*.tfstate.*
+crash.log
+terraform.tfvars
+.terraform/
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
