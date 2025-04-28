@@ -84,4 +84,9 @@ resource "aws_instance" "my_instance" {
     Name = each.key # Name of the EC2 instance
   }
 }
+
+resource "aws_instance" "outside_instance" {
+  ami           = var.ec2_ami_id        #ubuntu
+  instance_type = var.ec2_instance_type # t2.micro
+}
  
