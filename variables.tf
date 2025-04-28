@@ -42,3 +42,4 @@ variable "outbound_traffic_allowed" {
   default = true
   type    = bool
 }
+

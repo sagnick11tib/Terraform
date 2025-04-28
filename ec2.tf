@@ -1,8 +1,12 @@
 # key pair login
 
 resource "aws_key_pair" "my_key" {
-  key_name   = "terra-key-ec2"
+  key_name   = "${var.env}-terra-key-ec2" # Name of the key pair
   public_key = file("terra-key-ec2.pub")
+  tags = {
+    Name        = "${var.env}-terra-key-ec2" # Name of the key pair
+    Environment = var.env # Environment (dev/prod)
+  }
 }
 
 # VPC & Security Group for EC2 (VPC = Virtual Private Cloud)
@@ -12,7 +16,7 @@ resource "aws_default_vpc" "default" {
 }
 
 resource "aws_security_group" "my_security_group" {
-  name        = "automate-sg"
+  name        = "${var.env}-automate-sg"
   description = "this will add a TF generated security group"
   vpc_id      = aws_default_vpc.default.id # VPC ID
 
@@ -59,6 +63,12 @@ resource "aws_security_group" "my_security_group" {
       description = "Allow all outbound traffic"
     }
   }
+
+  # tags for the security group
+  tags = {
+    Name        = "${var.env}-automate-sg" # Name of the security group
+    Environment = var.env # Environment (dev/prod)
+  }
 }
 
 # EC2 Instance
@@ -82,11 +92,6 @@ resource "aws_instance" "my_instance" {
   }
   tags = {
     Name = each.key # Name of the EC2 instance
+    Environment = var.env # Environment (dev/prod)
   }
 }
-
-resource "aws_instance" "outside_instance" {
-  ami           = var.ec2_ami_id        #ubuntu
-  instance_type = var.ec2_instance_type # t2.micro
-}
- 
